@@ -13,9 +13,7 @@ let args : Vec<String> = env::args().collect();
     let msg_size = &args[1];
     let delay = &args[2];
     let adress = &args[3];
-    let service = &args[4];
 
-    let qos = get_qos (service);
 
     let size = msg_size.parse::<usize>().unwrap();
     let delay = delay.parse::<u64>().unwrap();
@@ -23,6 +21,7 @@ let args : Vec<String> = env::args().collect();
     
     let mut mqttoptions = MqttOptions::new("Sender", adress, 1883);
     mqttoptions.set_keep_alive(50);
+    mqttoptions.set_max_packet_size(2);
 
     let mut eventloop = EventLoop::new(mqttoptions, 10).await;
     let requests_tx = eventloop.handle();
@@ -39,7 +38,7 @@ let args : Vec<String> = env::args().collect();
           payload.insert_str(0, &" ");
           payload.insert_str(0, &index_str);
 
-        let publish = Publish::new("hello", qos, payload);
+        let publish = Publish::new("hello", QoS::AtLeastOnce, payload);
         requests_tx.send(Request::Publish(publish)).await.unwrap();
         index += 1;
         time::delay_for(Duration::from_millis(delay)).await;
@@ -51,18 +50,5 @@ let args : Vec<String> = env::args().collect();
     loop {
         let _communication = eventloop.poll().await?;
         }  
-
-}
-
-fn get_qos(service : &str) -> QoS {
-
-    let qos_value = env::var(service).unwrap().parse::<u8>().unwrap();
-
-    match qos_value {
-      0 => QoS::AtMostOnce,
-      1 => QoS::AtLeastOnce,
-      2 => QoS::ExactlyOnce,
-      _ => QoS::AtMostOnce
-    }
 
 }
