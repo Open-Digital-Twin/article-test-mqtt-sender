@@ -467,6 +467,7 @@ name = "sender"
 version = "0.1.0"
 dependencies = [
  "async-channel",
+ "log",
  "rand",
  "rumqttc",
  "tokio",

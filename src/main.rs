@@ -27,7 +27,7 @@ let args : Vec<String> = env::args().collect();
     let requests_tx = eventloop.handle();
 
     task::spawn(async move {
-        let mut index = 0;
+        let mut index : i32 = 0;
         loop{
             
             let index_str = index.to_string();
@@ -38,8 +38,7 @@ let args : Vec<String> = env::args().collect();
           payload.insert_str(0, &" ");
           payload.insert_str(0, &index_str);
 
-        let publish = Publish::new("hello", QoS::AtLeastOnce, payload);
-        requests_tx.send(Request::Publish(publish)).await.unwrap();
+        requests_tx.send(publish_request(&(payload.as_str()) ,"hello")).await.unwrap();
         index += 1;
         time::delay_for(Duration::from_millis(delay)).await;
     
@@ -52,3 +51,14 @@ let args : Vec<String> = env::args().collect();
         }  
 
 }
+
+
+fn publish_request(payload: &str, topic: &str) -> Request {
+    let topic = topic.to_owned();
+    let message = String::from(payload);
+  
+    let qos = QoS::AtLeastOnce;
+  
+    let publish = Publish::new(&topic, qos, message);
+    Request::Publish(publish)
+  }
