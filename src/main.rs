@@ -13,7 +13,10 @@ let args : Vec<String> = env::args().collect();
     let msg_size = &args[1];
     let delay = &args[2];
     let adress = &args[3];
+    let qos = &args[4];
 
+    let service = get_qos(qos);
+    println!("{:?}",service);
 
     let size = msg_size.parse::<usize>().unwrap();
     let delay = delay.parse::<u64>().unwrap();
@@ -38,12 +41,10 @@ let args : Vec<String> = env::args().collect();
           payload.insert_str(0, &" ");
           payload.insert_str(0, &index_str);
 
-        requests_tx.send(publish_request(&(payload.as_str()) ,"hello")).await.unwrap();
+        requests_tx.send(publish_request(&(payload.as_str()) ,"hello",service)).await.unwrap();
         index += 1;
-        time::delay_for(Duration::from_millis(delay)).await;
-    
-        }
-    
+        time::delay_for(Duration::from_millis(delay)).await;    
+        }    
     });
 
     loop {
@@ -52,12 +53,17 @@ let args : Vec<String> = env::args().collect();
 
 }
 
+  fn get_qos(qos :&str) -> QoS {
 
-fn publish_request(payload: &str, topic: &str) -> Request {
+   match qos {
+  "1" => return QoS::AtLeastOnce,
+    _ => return QoS::AtMostOnce
+   } 
+  }
+
+fn publish_request(payload: &str, topic: &str, qos : QoS) -> Request {
     let topic = topic.to_owned();
     let message = String::from(payload);
-  
-    let qos = QoS::AtLeastOnce;
   
     let publish = Publish::new(&topic, qos, message);
     Request::Publish(publish)
