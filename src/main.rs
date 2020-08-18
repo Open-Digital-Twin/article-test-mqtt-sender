@@ -1,17 +1,16 @@
 use rumqttc::{EventLoop, MqttOptions, Publish, QoS, Request};
 use std::time::Duration;
 use tokio::{task, time};
-use std::error::Error;
 use std::env;
 use rand::{distributions::Alphanumeric, Rng, thread_rng};
 
 #[tokio::main(core_threads = 1)]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() {
 
 let args : Vec<String> = env::args().collect();
 
     let msg_size = &args[1];
-    let delay = &args[2];
+    let msg_max = &args[2];
     let adress = &args[3];
     let qos = &args[4];
 
@@ -19,7 +18,7 @@ let args : Vec<String> = env::args().collect();
     println!("{:?}",service);
 
     let size = msg_size.parse::<usize>().unwrap();
-    let delay = delay.parse::<u64>().unwrap();
+    let max =msg_max.parse::<i32>().unwrap();
 
     
     let mut mqttoptions = MqttOptions::new("Sender", adress, 1883);
@@ -43,13 +42,18 @@ let args : Vec<String> = env::args().collect();
 
         requests_tx.send(publish_request(&(payload.as_str()) ,"hello",service)).await.unwrap();
         index += 1;
-        time::delay_for(Duration::from_millis(delay)).await;    
+        time::delay_for(Duration::from_millis(10)).await;    
         }    
     });
 
-    loop {
-        let _communication = eventloop.poll().await?;
-        }  
+    let mut cntrl : i32 = 0;
+    loop 
+        {
+        let _incoming = eventloop.poll().await;  
+        cntrl = cntrl + 1;
+        if cntrl == max{break}
+        }
+
 
 }
 
